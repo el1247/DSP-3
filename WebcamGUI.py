@@ -68,7 +68,9 @@ class CameraGUI(tk.Tk):
     def __init__(self, camera, cammethod):
         tk.Tk.__init__(self)
         #tk.Tk.__init__(self, *args, **kwargs)
-        tk.Tk.iconbitmap(self,default="clienticon.ico") #Doesnt work  with apple '''
+        #tk.Tk.iconbitmap(self,default="clienticon.xbm") #Doesnt work  with apple '''
+        root=tk.Tk()
+        root.call('wm','iconbitmap',root._w,tk.BitmapImage(file='clienticon.xbm'))
         tk.Tk.wm_title(self, "WebCamera monitor")
         
         container = tk.Frame(self)
@@ -87,7 +89,7 @@ class CameraGUI(tk.Tk):
         
         self.camerawidth = 640
         self.cameraheight = 480
-        #self.flashcam() #
+        #self.flashcam() #seems to crash python when uncommented
         
         #Dictionary creation
         self.frames = {} 
@@ -254,7 +256,7 @@ class CameraFeed(tk.Frame):
         except:
             self.stopvid = 1 #Repeated line to fill except clause
         finally:    
-            #self.canvas.delete("all")
+            self.canvas.delete("all")
             self.canvas.create_image(self.canvasoffsetw, self.canvasoffseth, image = self.imgnoshow)
         
         
