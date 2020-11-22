@@ -68,10 +68,9 @@ class CameraGUI(tk.Tk):
     def __init__(self, camera, cammethod):
         tk.Tk.__init__(self)
         #tk.Tk.__init__(self, *args, **kwargs)
-        #tk.Tk.iconbitmap(self,default="clienticon.ico") #Doesnt work  with apple '''
-        #root=tk.Tk()
-        tk.Tk().call(self,'iconbitmap',tk.Tk()._w,tk.BitmapImage(file='clienticon.xbm'))
-        #tk.Tk.call('wm','icon',tk.BitmapImage(file='clienticon.xbm'))
+        #tk.Tk.iconbitmap(self,default="clienticon.xbm") #Doesnt work  with apple '''
+        root=tk.Tk()
+        root.call('wm','iconbitmap',root._w,tk.BitmapImage(file='clienticon.xbm'))
         tk.Tk.wm_title(self, "WebCamera monitor")
         
         container = tk.Frame(self)
