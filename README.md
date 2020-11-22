@@ -3,22 +3,13 @@ Digital Signal Processing Assignment 3
 
 This is a user interface that shows the RGB values of the center pixel of a webcam in real time.
 
-
-clienticon.ico
+Media folder
 -----------------
-Simply the logo for the GUI. Does not currently work on MAC OS.
-
--------------------------------------
-
-NoShowImg.png
------------------
-Custom made graphic of dimensions 640x480 that says No Show on it.
-
--------------------------------------
-
-NotEnabledImg.png
------------------
-Custom made graphic of dimensions 640x480 that says Camera Not Enabled on it.
+Contains all the media formats used by the GUI
+-clienticon.ico    Icon used for the GUI. Does not currently work on MAC OS.
+-clienticon.xbm    Icon used for the GUI on Mac OS. Does not currently work on Windows OS
+-NoShowImg.png     Custom made graphic of dimensions 640x480 that says No Show on it.
+-NotEnabledImg.png Custom made graphic of dimensions 640x480 that says Camera Not Enabled on it.
 
 -------------------------------------
 
