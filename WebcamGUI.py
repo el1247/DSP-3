@@ -16,6 +16,7 @@ from matplotlib import style
 style.use("ggplot")
 import numpy as np
 import PIL.Image, PIL.ImageTk
+import os
 
 LARGE_FONT = ("Verdana", 12)
   
@@ -67,12 +68,16 @@ class CameraGUI(tk.Tk):
     '''Overall GUI containter class'''
     def __init__(self, camera, cammethod, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+        basepath = os.getcwd()
+        self.mediapath = os.path.join(basepath, "media")
+        image = os.path.join(self.mediapath, "clienticon.ico")
         try:
-            tk.Tk.iconbitmap(self,default="clienticon.ico") #Windows Icon
+            tk.Tk.iconbitmap(self,default=image) #Windows Icon
             self.icon = 1
         except:
             try:
-                self.call('wm','iconbitmap',self._w,tk.BitmapImage(file='clienticon.xbm')) #Apple Icon
+                image = os.path.join(self.mediapath, "clienticon.xbm")
+                self.call('wm','iconbitmap',self._w,tk.BitmapImage(file=image)) #Apple Icon
                 self.icon = 1
             except:
                 self.icon = 0
@@ -234,13 +239,18 @@ class CameraFeed(tk.Frame):
         
         self.noimageshow =0
         self.noimagenoten = 0
+
         try:
-            self.imgnoten =  PIL.ImageTk.PhotoImage(PIL.Image.open("NotEnabledImg.png"))
+            image = os.path.join(controller.mediapath, "NotEnabledImg.png")
+            print(image)
+            print(os.path.isfile(image))
+            self.imgnoten =  PIL.ImageTk.PhotoImage(PIL.Image.open(image))
         except:
             self.noimagenoten = 1
         finally:
             try: 
-                self.imgnoshow =  PIL.ImageTk.PhotoImage(PIL.Image.open("NoShowImg.png"))
+                image = os.path.join(controller.mediapath, "NoShowImg.png")
+                self.imgnoshow =  PIL.ImageTk.PhotoImage(PIL.Image.open(image))
                 self.canvas.create_image(self.canvasoffsetw, self.canvasoffseth, image = self.imgnoshow)
             except:
                 self.noimageshow = 1
