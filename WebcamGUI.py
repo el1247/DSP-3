@@ -65,45 +65,51 @@ class RealtimePlotWindow:
 
 class CameraGUI(tk.Tk):
     '''Overall GUI containter class'''
-    def __init__(self, camera, cammethod):
-        tk.Tk.__init__(self)
-        #tk.Tk.__init__(self, *args, **kwargs)
-        #tk.Tk.iconbitmap(self,default="clienticon.xbm") #Doesnt work  with apple '''
-        root=tk.Tk()
-        root.call('wm','iconbitmap',root._w,tk.BitmapImage(file='clienticon.xbm'))
-        tk.Tk.wm_title(self, "WebCamera monitor")
-        
-        container = tk.Frame(self)
-        container.pack(side="top", fill="both", expand=True)
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_rowconfigure(1, weight=1)
-        container.grid_rowconfigure(2, weight=1)
-        container.grid_columnconfigure(0, weight=1)
-        container.grid_columnconfigure(1, weight=1)
-        container.grid_columnconfigure(2, weight=1)
-        
-        self.RTP = RealtimePlotWindow()
-        self.cammethod = cammethod #method for starting camera class
-        self.camera = camera #assigns camera class 
-        self.cameraon = 0
-        
-        self.camerawidth = 640
-        self.cameraheight = 480
-        #self.flashcam() #seems to crash python when uncommented
-        
-        #Dictionary creation
-        self.frames = {} 
-        for F in (CameraFeed,RGBPlot):
-            if F == RGBPlot:
-                frame = F(container, self)
-            else:
-                frame = F(container, self)
-            self.frames[F] = frame        
-            frame.grid(row=0, column=0, sticky="nsew") #pack or grid
-            #frame.grid_rowconfigure(0, weight=1)
-            #frame.grid_columnconfigure(0, weight=1)
-        
-        self.showFrame(RGBPlot) #Shows default page
+    def __init__(self, camera, cammethod, *args, **kwargs):
+        tk.Tk.__init__(self, *args, **kwargs)
+        try:
+            tk.Tk.iconbitmap(self,default="clienticon.ico") #Windows Icon
+            self.icon = 1
+        except:
+            try:
+                self.call('wm','iconbitmap',self._w,tk.BitmapImage(file='clienticon.xbm')) #Apple Icon
+                self.icon = 1
+            except:
+                self.icon = 0
+        finally:
+            tk.Tk.wm_title(self, "WebCamera monitor")
+            
+            container = tk.Frame(self)
+            container.pack(side="top", fill="both", expand=True)
+            container.grid_rowconfigure(0, weight=1)
+            container.grid_rowconfigure(1, weight=1)
+            container.grid_rowconfigure(2, weight=1)
+            container.grid_columnconfigure(0, weight=1)
+            container.grid_columnconfigure(1, weight=1)
+            container.grid_columnconfigure(2, weight=1)
+            
+            self.RTP = RealtimePlotWindow()
+            self.cammethod = cammethod #method for starting camera class
+            self.camera = camera #assigns camera class 
+            self.cameraon = 0
+            
+            self.camerawidth = 640
+            self.cameraheight = 480
+            #self.flashcam() #seems to crash python when uncommented
+            
+            #Dictionary creation
+            self.frames = {} 
+            for F in (CameraFeed,RGBPlot):
+                if F == RGBPlot:
+                    frame = F(container, self)
+                else:
+                    frame = F(container, self)
+                self.frames[F] = frame        
+                frame.grid(row=0, column=0, sticky="nsew") #pack or grid
+                #frame.grid_rowconfigure(0, weight=1)
+                #frame.grid_columnconfigure(0, weight=1)
+            
+            self.showFrame(RGBPlot) #Shows default page
     
     
     def flashcam(self):
@@ -226,15 +232,25 @@ class CameraFeed(tk.Frame):
         self.canvas = tk.Canvas(self, width = controller.camerawidth, height = controller.cameraheight)#place in webcam page
         self.canvas.grid(row=2, columnspan=3, padx=10, pady=10)
         
-        self.imgnoten =  PIL.ImageTk.PhotoImage(PIL.Image.open("NotEnabledImg.png"))
-        self.imgnoshow =  PIL.ImageTk.PhotoImage(PIL.Image.open("NoShowImg.png"))
-        self.canvas.create_image(self.canvasoffsetw, self.canvasoffseth, image = self.imgnoshow)
+        self.noimageshow =0
+        self.noimagenoten = 0
+        try:
+            self.imgnoten =  PIL.ImageTk.PhotoImage(PIL.Image.open("NotEnabledImg.png"))
+        except:
+            self.noimagenoten = 1
+        finally:
+            try: 
+                self.imgnoshow =  PIL.ImageTk.PhotoImage(PIL.Image.open("NoShowImg.png"))
+                self.canvas.create_image(self.canvasoffsetw, self.canvasoffseth, image = self.imgnoshow)
+            except:
+                self.noimageshow = 1
         
     
     def toggleShow(self, controller):
         if self.toggleShowbutton.config("text")[-1] == "Show me":
             if not self.cameraupdatestart(controller):
-                self.canvas.create_image(self.canvasoffsetw, self.canvasoffseth, image = self.imgnoten)
+                if not self.noimagenoten:
+                    self.canvas.create_image(self.canvasoffsetw, self.canvasoffseth, image = self.imgnoten)
             self.toggleShowbutton.config(text="Stop showing me",bg="#ff4d4d")
         else:
             self.cameraupdatestop(controller)
@@ -257,8 +273,9 @@ class CameraFeed(tk.Frame):
             self.stopvid = 1 #Repeated line to fill except clause
         finally:    
             self.canvas.delete("all")
-            self.canvas.create_image(self.canvasoffsetw, self.canvasoffseth, image = self.imgnoshow)
-        
+            if not self.noimageshow:
+                self.canvas.create_image(self.canvasoffsetw, self.canvasoffseth, image = self.imgnoshow)
+
         
     def cameraupdate(self, controller):
         ret, frame = controller.camera.get_frame()
