@@ -25,6 +25,7 @@ class IIR_filter():
         
         self.inputlog = [[],[],[]]
         self.outputlog = [[],[],[]]
+        self.logcount = 0
         
     
     def filt(self, v):
@@ -45,6 +46,7 @@ class IIR_filter():
     
     
     def filt3(self, r_in, g_in, b_in):
+        self.logcount += 1
         self.inputlog[0].append(r_in)
         self.inputlog[1].append(g_in)
         self.inputlog[2].append(b_in)
