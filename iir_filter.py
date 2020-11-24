@@ -49,9 +49,9 @@ class IIR_filter():
         self.inputlog[1].append(g_in)
         self.inputlog[2].append(b_in)
         
-        r_out = r_in
-        g_out = g_in
-        b_out = b_in
+        r_out = r_in+60
+        g_out = g_in+60
+        b_out = b_in+60
                 
         self.outputlog[0].append(r_out)
         self.outputlog[1].append(g_out)

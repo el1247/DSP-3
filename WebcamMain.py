@@ -22,9 +22,9 @@ def hasData(retval, data):
     
     rfilt, gfilt, bfilt = iirfilter.filt3(r,g,b)
     
-    app.RTPfilt.addDatab(b)
-    app.RTPfilt.addDatag(g)
-    app.RTPfilt.addDatar(r)
+    app.RTPfilt.addDatab(bfilt)
+    app.RTPfilt.addDatag(gfilt)
+    app.RTPfilt.addDatar(rfilt)
 
    
 #create instances of camera
