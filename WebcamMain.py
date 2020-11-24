@@ -15,10 +15,12 @@ def hasData(retval, data):
     b = data[0]
     g = data[1]
     r = data[2]
-    app.RTP.addDatab(b)
-    app.RTP.addDatag(g)
-    app.RTP.addDatar(r)
-
+    app.RTPraw.addDatab(b)
+    app.RTPraw.addDatag(g)
+    app.RTPraw.addDatar(r)
+    app.RTPfilt.addDatab(b)
+    app.RTPfilt.addDatag(g)
+    app.RTPfilt.addDatar(r)
 
    
 #create instances of camera
@@ -26,7 +28,8 @@ camera = webcam2rgbplus.webcam2rgbplus()
 #camera = webcam2rgb.Webcam2rgb()
 
 app = WebcamGUI.CameraGUI(camera,hasData)
-ani = animation.FuncAnimation(app.RTP.fig, app.RTP.update, interval = 100)
+ani = animation.FuncAnimation(app.RTPraw.fig, app.RTPraw.update, interval = 100)
+ani2 = animation.FuncAnimation(app.RTPfilt.fig, app.RTPfilt.update, interval = 100)
 app.mainloop()
 
 camera.__del__()
