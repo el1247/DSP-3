@@ -35,3 +35,8 @@ WebcamMain.py
 -----------------
 Main code that creates an instance of the webcam2rgbplus class, defines plotting data method for GUI and launches GUI.
 
+-------------------------------------
+
+iir_filter.py
+-----------------
+Class file containg IIR_filter class that is used to filter input RGB data and return filtered values
