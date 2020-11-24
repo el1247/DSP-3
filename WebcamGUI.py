@@ -17,11 +17,12 @@ style.use("ggplot")
 import numpy as np
 import PIL.Image, PIL.ImageTk
 import os
+import matplotlib.animation as animation
 
 LARGE_FONT = ("Verdana", 12)
   
 
-class RealtimePlotWindow:
+class RealtimePlotWindow_old:
     def __init__(self):
         self.fig  = Figure(figsize=(7,6), dpi=100)
         self.ax = self.fig.add_subplot(111)
@@ -34,11 +35,12 @@ class RealtimePlotWindow:
         self.liner, = self.ax.plot(self.plotbufferr, color="red", linewidth = 0.8)
         self.lineg, = self.ax.plot(self.plotbufferg, color = "green", linewidth = 0.8)
         self.lineb, = self.ax.plot(self.plotbufferb, color = "blue", linewidth = 0.8)
+
         self.ax.set_ylim(-1, 270)
         self.ringbufferr = []
         self.ringbufferg = []
         self.ringbufferb = []
-
+        
         
     def update(self, data):
         self.plotbufferr = np.append(self.plotbufferr, self.ringbufferr)
@@ -63,6 +65,57 @@ class RealtimePlotWindow:
 
     def addDatab(self, v):
         self.ringbufferb.append(v)
+       
+        
+       
+class RealtimePlotWindow:
+    def __init__(self):
+        self.fig  = Figure(figsize=(7,6), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.ax.set_xlabel("Index value")
+        self.ax.set_ylabel("Colour value")
+        self.ax.set_title("RGB values")
+        self.plotbufferr = np.zeros(500)
+        self.plotbufferg = np.zeros(500)
+        self.plotbufferb = np.zeros(500)
+        self.plotbuffers = [self.plotbufferr, self.plotbufferg, self.plotbufferb]
+        
+        self.liner, = self.ax.plot(self.plotbuffers[0], color="red", linewidth = 0.8)
+        self.lineg, = self.ax.plot(self.plotbuffers[1], color = "green", linewidth = 0.8)
+        self.lineb, = self.ax.plot(self.plotbuffers[2], color = "blue", linewidth = 0.8)
+        self.lines = [self.liner, self.lineg, self.lineb]
+
+        self.ax.set_ylim(-1, 270)
+        self.ringbufferr = []
+        self.ringbufferg = []
+        self.ringbufferb = []
+        self.ringbuffers = [self.ringbufferr, self.ringbufferg, self.ringbufferb]
+
+        
+    def update(self, data):
+        self.plotbuffers[0] = np.append(self.plotbuffers[0], self.ringbuffers[0])
+        self.plotbuffers[0] = self.plotbuffers[0][-500:]
+        self.ringbuffers[0] = []
+        self.lines[0].set_ydata(self.plotbuffers[0])
+        self.plotbuffers[1] = np.append(self.plotbuffers[1], self.ringbuffers[1])
+        self.plotbuffers[1] = self.plotbuffers[1][-500:]
+        self.ringbuffers[1] = []
+        self.lines[1].set_ydata(self.plotbuffers[1])
+        self.plotbuffers[2] = np.append(self.plotbuffers[2], self.ringbuffers[2])
+        self.plotbuffers[2] = self.plotbuffers[2][-500:]
+        self.ringbuffers[2] = []
+        self.lines[2].set_ydata(self.plotbuffers[2])
+        return self.lines
+       # return self.liner, self.lineg, self.lineb,
+
+    def addDatar(self, v):
+        self.ringbuffers[0].append(v)
+
+    def addDatag(self, v):
+        self.ringbuffers[1].append(v)
+
+    def addDatab(self, v):
+        self.ringbuffers[2].append(v)
 
 class CameraGUI(tk.Tk):
     '''Overall GUI containter class'''
@@ -93,7 +146,11 @@ class CameraGUI(tk.Tk):
             container.grid_columnconfigure(1, weight=1)
             container.grid_columnconfigure(2, weight=1)
             
-            self.RTP = RealtimePlotWindow()
+            self.RTPraw = RealtimePlotWindow()
+            self.RTPfilt = RealtimePlotWindow()
+            self.RTPfilt.ax.set_title("RGB Filtered")
+            
+            
             self.cammethod = cammethod #method for starting camera class
             self.camera = camera #assigns camera class 
             self.cameraon = 0
@@ -193,7 +250,7 @@ class RGBPlot(tk.Frame):
         self.toggleFeedbutton.grid(row=0, column=2, padx=10, pady=10)
 
         
-        canvas = FigureCanvasTkAgg(controller.RTP.fig, self)
+        canvas = FigureCanvasTkAgg(controller.RTPraw.fig, self)
         canvas.draw()
         canvas.get_tk_widget().grid(row=1, columnspan=3)        
         
@@ -201,6 +258,17 @@ class RGBPlot(tk.Frame):
         toolbarFrame.grid(row=2, columnspan=3)
         toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
         toolbar.update()
+    
+        '''Start of second Plot'''
+        canvas2 = FigureCanvasTkAgg(controller.RTPfilt.fig, self)
+        canvas2.draw()
+        canvas2.get_tk_widget().grid(row=1, column=3, columnspan=3)
+        
+        toolbarFrame = tk.Frame(self)
+        toolbarFrame.grid(row=2, column=3, columnspan=3)
+        toolbar = NavigationToolbar2Tk(canvas2, toolbarFrame)
+        toolbar.update()
+        '''End of second PLot'''
         
         
     def toggleFeed(self, controller):
@@ -242,8 +310,6 @@ class CameraFeed(tk.Frame):
 
         try:
             image = os.path.join(controller.mediapath, "NotEnabledImg.png")
-            print(image)
-            print(os.path.isfile(image))
             self.imgnoten =  PIL.ImageTk.PhotoImage(PIL.Image.open(image))
         except:
             self.noimagenoten = 1
