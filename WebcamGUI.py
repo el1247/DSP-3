@@ -25,6 +25,7 @@ LARGE_FONT = ("Verdana", 12) #Constant created for font consistancy
 
 '''Idea log: Change try/except in init of CameraGUI for logo into OS specific code. May need to import platform: https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on#:~:text=If%20you%20want%20to%20check,OS%20itself%20then%20use%20sys.
 Issue with enabling show me, switching to RGB plot, enabling camera and then switching back to camera view
+When using DShow consider capturing frames for 30 seconds and counting frames to get fps?
 Redundant variables: self.cameraon currently is never used, leave for now
 
 '''
@@ -205,8 +206,8 @@ class CameraGUI(tk.Tk):
         else:
             print("Camera not on")
         return 0 #Returns 0 if camera is not open or failed to close
-        
-        
+     
+      
         
 class RGBPlot(tk.Frame):
     '''RGB plotting page'''
@@ -231,11 +232,16 @@ class RGBPlot(tk.Frame):
         #Top right label displaying colour
         self.labelc = tk.Label(self, text="#000000", font=LARGE_FONT)        
         self.labelc.grid(row=0, column = 3, padx=10,pady=10)
+        
+        #Top right label displaying colour
+        self.labelcshow = tk.Label(self,width = 30)        
+        self.labelcshow.grid(row=0, column = 4, padx=10,pady=10)
 
         #Left animated plot (animation function needs to be called in main code)
         canvas = FigureCanvasTkAgg(controller.RTPraw.fig, self)
         canvas.draw()
-        canvas.get_tk_widget().grid(row=1, columnspan=3)        
+        canvas.get_tk_widget().grid(row=1, columnspan=3)   
+        
         
         #Left plot tool bar
         toolbarFrame = tk.Frame(self)
@@ -264,24 +270,24 @@ class RGBPlot(tk.Frame):
         else:
             if controller.GUIcamstop(): #Tries to call GUI camera stop method. Condition passes if camera successfully closes
                 self.toggleFeedbutton.config(text="Enable camera feed", bg="#70db70") #Changes button display to enable option
-                self.after_cancel(self.colouris)
+                controller.after_cancel(self.colouris) #Cancels the callback fo the colour update for the label
                 
                 
     def colourdisplay(self, controller):
-        red = round(controller.RTPfilt.plotbuffers[0][499])
-        green = round(controller.RTPfilt.plotbuffers[1][499])
-        blue = round(controller.RTPfilt.plotbuffers[2][499])
-        redh = hex(red)
-        greenh = (hex(green))[2:]
-        blueh = (hex(blue))[2:]
-        value = redh + greenh + blueh
+        red = int(controller.RTPraw.plotbuffers[0][499])
+        green = int(controller.RTPraw.plotbuffers[1][499])
+        blue = int(controller.RTPraw.plotbuffers[2][499])
+        value = f'#{red:02x}{green:02x}{blue:02x}'
         self.labelc.config(text=value) 
-        self.labelc.config(bg = ("#"+value[2:]))
+        self.labelcshow.config(bg = (value))
         self.colouris = controller.after(self.colourdelay, self.colourdisplay, controller) #Method calls itself with a delay of self.cameradelay ms.
-        
-    def __del__(self):
-        self.after_cancel(self.colouris)
-        self.after_cancel(self.videofeed)
+              
+    def __del__(self, controller):
+        try:
+            controller.after_cancel(self.colouris)
+        except:
+            pass
+
 
 
 class CameraFeed(tk.Frame):
@@ -375,3 +381,10 @@ class CameraFeed(tk.Frame):
             return 0 #Return to prevent method from calling itself
         
         self.videofeed = controller.after(self.cameradelay, self.cameraupdate, controller) #Method calls itself with a delay of self.cameradelay ms.
+
+
+    def __del__(self, controller):
+        try:
+            controller.after_cancel(self.cameraupdate)
+        except:
+            pass
