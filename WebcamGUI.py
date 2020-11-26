@@ -24,6 +24,7 @@ LARGE_FONT = ("Verdana", 12) #Constant created for font consistancy
   
 
 '''Idea log: Change try/except in init of CameraGUI for logo into OS specific code. May need to import platform: https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on#:~:text=If%20you%20want%20to%20check,OS%20itself%20then%20use%20sys.
+Issue with enabling show me, switching to RGB plot, enabling camera and then switching back to camera view
 Redundant variables: self.cameraon currently is never used, leave for now
 
 '''
@@ -32,21 +33,28 @@ Redundant variables: self.cameraon currently is never used, leave for now
 class RealtimePlotWindow:
     '''Class used to animate a plot. A created instance has 3 memory channels: r g and b stored in associated index positions. Channels are updated
     using the addData method. Call the update function to move the data into the graph memory. Call update when animating.'''
-    def __init__(self):
+    def __init__(self, samplerate = 1):
         '''Initialiser. Creates 3 numpy arrays of size 500 containing all 0s'''
         self.fig  = Figure(figsize=(7,6), dpi=100) #Creates instance of figure. Adjust size here
         self.ax = self.fig.add_subplot(111)
-        self.ax.set_xlabel("Index value") #X axis label
-        self.ax.set_ylabel("Colour value") #Y axis label
-        self.ax.set_title("RGB values") #Plot title
         self.plotbuffers = [np.zeros(500), np.zeros(500), np.zeros(500)] #Creation of arrays
+        
+        if samplerate < 1:
+            samplerate = 1
+        self.xaxis = np.linspace(500/samplerate, 0, 500, endpoint = False) #Creates X axis to be used to scale graph #Running from high to low inverts data
                 
-        liner, = self.ax.plot(self.plotbuffers[0], color="red", linewidth = 0.8)       #Creation of red line
-        lineg, = self.ax.plot(self.plotbuffers[1], color = "green", linewidth = 0.8)   #Creation of green line
-        lineb, = self.ax.plot(self.plotbuffers[2], color = "blue", linewidth = 0.8)    #Creation of blue line
+        liner, = self.ax.plot(self.xaxis, self.plotbuffers[0], color="red", linewidth = 0.8)       #Creation of red line
+        lineg, = self.ax.plot(self.xaxis, self.plotbuffers[1], color = "green", linewidth = 0.8)   #Creation of green line
+        lineb, = self.ax.plot(self.xaxis, self.plotbuffers[2], color = "blue", linewidth = 0.8)    #Creation of blue line
         self.lines = [liner, lineg, lineb] #Creation of lines array
 
-        self.ax.set_ylim(-1, 270)
+        if samplerate == 1:  
+            self.ax.set_xlabel("Index value") #X axis label
+        else:
+            self.ax.set_xlabel("Time since measurement(s)") #X axis label
+        self.ax.set_ylabel("Colour value") #Y axis label
+        self.ax.set_title("RGB values") #Plot title
+        self.ax.set_ylim(-1, 270) #Y axis limits
         self.ringbuffers = [[],[],[]] #Creation of ring buffers
 
 
@@ -108,10 +116,6 @@ class CameraGUI(tk.Tk):
             container.grid_columnconfigure(1, weight=1)
             container.grid_columnconfigure(2, weight=1)
             
-            self.RTPraw = RealtimePlotWindow() #Creates instance of animated plot class to display the raw camera data
-            self.RTPfilt = RealtimePlotWindow()#Creates instance of animated plot class to display the filtered camera data
-            self.RTPfilt.ax.set_title("RGB Filtered") #Resets the title of the filtered plot
-                           
             self.cammethod = cammethod #method for starting camera class
             self.camera = camera #assigns camera class 
             self.cameraon = 0 #Internal variable tracking if the camera is on
@@ -121,6 +125,10 @@ class CameraGUI(tk.Tk):
             self.camerafps = 30 #Assumed camera fps
             
             self.grabcamstat() #Method to aquire camera width, height and fps #seems to crash python on MacOS when uncommented
+            
+            self.RTPraw = RealtimePlotWindow(self.camerafps) #Creates instance of animated plot class to display the raw camera data
+            self.RTPfilt = RealtimePlotWindow(self.camerafps)#Creates instance of animated plot class to display the filtered camera data
+            self.RTPfilt.ax.set_title("RGB Filtered") #Resets the title of the filtered plot
             
             self.frames = {} #Creates a dictionary of possible frames to show
             for F in (CameraFeed,RGBPlot): #Enter all frame class names that are to be created and used
@@ -134,11 +142,16 @@ class CameraGUI(tk.Tk):
         '''Turns users camera on, grabs dimensions and then turns the camera off again'''
         self.GUIcamstart() #Turns camera on
         self.camerawidth, self.cameraheight = self.camera.getGeometry() #Gets cameras dimensions
-        self.camerawidth = int(self.camerawidth)
-        self.cameraheight = int(self.cameraheight)
-        self.camerafps = self.camera.cameraFs() #Gets cameras sampling rate
+        self.camerawidth = int(self.camerawidth) #data type conversion to integer
+        self.cameraheight = int(self.cameraheight) #data type conversion to integer
+        
+        camerafs = self.camera.cameraFs() #Gets cameras sampling rate
+        if camerafs:
+            self.camerafps = int(camerafs)
+        else:
+            print("Warning: Observed sample rate is 0.")
         self.GUIcamstop() #Turns camera off
-        print("Dimensions = "+str(self.camerawidth)+" x "+str(self.cameraheight)+". Sampling rate = "+str(self.camerafps))
+        print("Dimensions = "+str(self.camerawidth)+" x "+str(self.cameraheight)+". Sampling rate = "+str(self.camerafps)+". (Measured = "+str(camerafs)+")")
     
     
     def showFrame(self, control):
@@ -199,6 +212,7 @@ class RGBPlot(tk.Frame):
     '''RGB plotting page'''
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent) #Calls tkinter initialiser
+        self.colourdelay = 33
         
         #Top left label displaying page name
         label = tk.Label(self, text="RGB Plot", font=LARGE_FONT)        
@@ -213,6 +227,10 @@ class RGBPlot(tk.Frame):
         self.toggleFeedbutton = tk.Button(self, text="Enable camera feed",width = 30, bg="#70db70",
                             command=lambda: self.toggleFeed(controller))
         self.toggleFeedbutton.grid(row=0, column=2, padx=10, pady=10)
+
+        #Top right label displaying colour
+        self.labelc = tk.Label(self, text="#000000", font=LARGE_FONT)        
+        self.labelc.grid(row=0, column = 3, padx=10,pady=10)
 
         #Left animated plot (animation function needs to be called in main code)
         canvas = FigureCanvasTkAgg(controller.RTPraw.fig, self)
@@ -242,10 +260,28 @@ class RGBPlot(tk.Frame):
         if self.toggleFeedbutton.config("text")[-1] == "Enable camera feed": #Checks buttons current state
             if controller.GUIcamstart(): #Tries to call GUI camera start method. Condition passes if camera successfully opens
                 self.toggleFeedbutton.config(text="Disable camera feed",bg="#ff4d4d") #Changes button display to disable option
+                self.colourdisplay(controller)
         else:
             if controller.GUIcamstop(): #Tries to call GUI camera stop method. Condition passes if camera successfully closes
                 self.toggleFeedbutton.config(text="Enable camera feed", bg="#70db70") #Changes button display to enable option
+                self.after_cancel(self.colouris)
+                
+                
+    def colourdisplay(self, controller):
+        red = round(controller.RTPfilt.plotbuffers[0][499])
+        green = round(controller.RTPfilt.plotbuffers[1][499])
+        blue = round(controller.RTPfilt.plotbuffers[2][499])
+        redh = hex(red)
+        greenh = (hex(green))[2:]
+        blueh = (hex(blue))[2:]
+        value = redh + greenh + blueh
+        self.labelc.config(text=value) 
+        self.labelc.config(bg = ("#"+value[2:]))
+        self.colouris = controller.after(self.colourdelay, self.colourdisplay, controller) #Method calls itself with a delay of self.cameradelay ms.
         
+    def __del__(self):
+        self.after_cancel(self.colouris)
+        self.after_cancel(self.videofeed)
 
 
 class CameraFeed(tk.Frame):

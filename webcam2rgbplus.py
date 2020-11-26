@@ -36,6 +36,7 @@ class webcam2rgbplus(webcam2rgb.Webcam2rgb):
         try:
             if self.cam.isOpened():
                 self.cam.release()
+                print("Stopping camera")
         except:
             print("No instance of camera to close")
             

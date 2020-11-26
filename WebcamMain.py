@@ -19,6 +19,7 @@ def hasData(retval, data):
     app.RTPraw.addData(r, g, b)
     rfilt, gfilt, bfilt = iirfilter.filt3(r,g,b)
     app.RTPfilt.addData(rfilt, gfilt, bfilt)
+    
   
 #create instances of camera
 camera = webcam2rgbplus.webcam2rgbplus()
