@@ -19,16 +19,17 @@ class webcam2rgbplus(webcam2rgb.Webcam2rgb):
         #print("Starting webcam") #Method already says opening camera
         webcam2rgb.Webcam2rgb.start(self, callback, cameraNumber, width, height, fps, directShow)
         
-    
+        
     def stop(self):
         try:
             webcam2rgb.Webcam2rgb.stop()
         except:
             print("Could not execute webcam2rgb.stop")
+            
         try:
             self.cam.release() #Potentially try catch for no instance of cam?
         except:
-            print("") #Prints nothing to console, in case app is closed without instance of webcam
+            print("Cam release failed") #Prints nothing to console, in case app is closed without instance of webcam
         
     '''Custom classes'''
     def __del__(self):

@@ -16,15 +16,9 @@ def hasData(retval, data):
     b = data[0]
     g = data[1]
     r = data[2]
-    app.RTPraw.addDatab(b)
-    app.RTPraw.addDatag(g)
-    app.RTPraw.addDatar(r)
-    
+    app.RTPraw.addData(r, g, b)
     rfilt, gfilt, bfilt = iirfilter.filt3(r,g,b)
-    
-    app.RTPfilt.addDatab(bfilt)
-    app.RTPfilt.addDatag(gfilt)
-    app.RTPfilt.addDatar(rfilt)
+    app.RTPfilt.addData(rfilt, gfilt, bfilt)
 
    
 #create instances of camera
