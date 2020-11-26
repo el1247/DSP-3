@@ -22,10 +22,10 @@ class webcam2rgbplus(webcam2rgb.Webcam2rgb):
         
     def stop(self):
         try:
-            webcam2rgb.Webcam2rgb.stop()
-        except:
+            webcam2rgb.Webcam2rgb.stop(self)
+        except Exception as e:
             print("Could not execute webcam2rgb.stop")
-            
+            print(e)
         try:
             self.cam.release() #Potentially try catch for no instance of cam?
         except:

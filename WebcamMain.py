@@ -19,17 +19,17 @@ def hasData(retval, data):
     app.RTPraw.addData(r, g, b)
     rfilt, gfilt, bfilt = iirfilter.filt3(r,g,b)
     app.RTPfilt.addData(rfilt, gfilt, bfilt)
-
-   
+  
 #create instances of camera
 camera = webcam2rgbplus.webcam2rgbplus()
-#camera = webcam2rgb.Webcam2rgb()
 
+#Filter coefficients
 r = 0.2
 f = 0
 w = 2*np.pi*f 
 iirfilter = iir_filter.IIR_filter(r,w)
 
+#Starting animation and GUI
 app = WebcamGUI.CameraGUI(camera,hasData)
 ani = animation.FuncAnimation(app.RTPraw.fig, app.RTPraw.update, interval = 100)
 ani2 = animation.FuncAnimation(app.RTPfilt.fig, app.RTPfilt.update, interval = 100)

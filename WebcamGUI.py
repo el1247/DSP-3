@@ -138,7 +138,7 @@ class CameraGUI(tk.Tk):
         self.cameraheight = int(self.cameraheight)
         self.camerafps = self.camera.cameraFs() #Gets cameras sampling rate
         self.GUIcamstop() #Turns camera off
-        print("Dimensions ="+str(self.camerawidth)+" x "+str(self.cameraheight)+". Sampling rate = "+str(self.camerafps))
+        print("Dimensions = "+str(self.camerawidth)+" x "+str(self.cameraheight)+". Sampling rate = "+str(self.camerafps))
     
     
     def showFrame(self, control):
