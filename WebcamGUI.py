@@ -118,6 +118,7 @@ class CameraGUI(tk.Tk):
             container.grid_columnconfigure(2, weight=1)
             
             self.cammethod = cammethod #method for starting camera class
+            '''Move cammethod down and run boot test for camera FPS at startup?'''
             self.camera = camera #assigns camera class 
             self.cameraon = 0 #Internal variable tracking if the camera is on
             
@@ -141,7 +142,8 @@ class CameraGUI(tk.Tk):
     
     def grabcamstat(self):
         '''Turns users camera on, grabs dimensions and then turns the camera off again'''
-        self.GUIcamstart() #Turns camera on
+        if not self.GUIcamstart(): #Turns camera on. If camera is off the condition passes
+            return 0 #Exits the method as the camera failed to open
         self.camerawidth, self.cameraheight = self.camera.getGeometry() #Gets cameras dimensions
         self.camerawidth = int(self.camerawidth) #data type conversion to integer
         self.cameraheight = int(self.cameraheight) #data type conversion to integer
@@ -151,9 +153,10 @@ class CameraGUI(tk.Tk):
             self.camerafps = int(camerafs)
         else:
             print("Warning: Observed sample rate is 0.")
-        self.GUIcamstop() #Turns camera off
+        print(self.camera.cam.getBackendName())
         print("Dimensions = "+str(self.camerawidth)+" x "+str(self.cameraheight)+". Sampling rate = "+str(self.camerafps)+". (Measured = "+str(camerafs)+")")
-    
+        self.GUIcamstop() #Turns camera off
+        
     
     def showFrame(self, control):
         '''Changes frame being displayed on the window'''
@@ -207,6 +210,13 @@ class CameraGUI(tk.Tk):
             print("Camera not on")
         return 0 #Returns 0 if camera is not open or failed to close
      
+        
+     def __del__(self):
+        try:
+            print("hi")
+        except:
+            pass
+        
       
         
 class RGBPlot(tk.Frame):
@@ -274,10 +284,11 @@ class RGBPlot(tk.Frame):
                 
                 
     def colourdisplay(self, controller):
-        red = int(controller.RTPraw.plotbuffers[0][499])
-        green = int(controller.RTPraw.plotbuffers[1][499])
-        blue = int(controller.RTPraw.plotbuffers[2][499])
-        value = f'#{red:02x}{green:02x}{blue:02x}'
+        '''Control for the two labels on the top right that display the colour value and colour'''
+        red = int(controller.RTPraw.plotbuffers[0][499]) #Takes the last value of the red plot buffer
+        green = int(controller.RTPraw.plotbuffers[1][499]) #Takes the last value of the green plot buffer
+        blue = int(controller.RTPraw.plotbuffers[2][499]) #Takes the last value of the blue plot buffer
+        value = f'#{red:02x}{green:02x}{blue:02x}' #String formating to provide combined colour hex code
         self.labelc.config(text=value) 
         self.labelcshow.config(bg = (value))
         self.colouris = controller.after(self.colourdelay, self.colourdisplay, controller) #Method calls itself with a delay of self.cameradelay ms.
@@ -361,7 +372,7 @@ class CameraFeed(tk.Frame):
         try:
             controller.after_cancel(self.videofeed) #Stops future callbacks of cameraupdate method. Try except in case there is no callback instance
         except:
-            self.stopvid = 1 #Repeated line to fill except clause
+            pass
         finally:    
             self.canvas.delete("all") #Clears canvas. Done for general cleanliness as well as the potential of webcam image being bigger than new image to be displayed 
             if not self.noimageshow: #Checks if image is there to draw
