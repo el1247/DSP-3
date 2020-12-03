@@ -86,6 +86,7 @@ class CameraGUI(tk.Tk):
         self.os = os.name #Gets system OS name
         if self.os =="nt": #Check to see if os is windows
                 self.directShow = True #Windows code
+                self.directShow = False #Insert for testing purpose#######################################################################
         else:
             self.directShow = False #Linux and MacOS code
         
@@ -104,40 +105,39 @@ class CameraGUI(tk.Tk):
                 self.icon = 1 #Indicates icon was a success
             except:
                 self.icon = 0 #Indicates icon was a failure
-        finally:
             
-            tk.Tk.wm_title(self, "WebCamera monitor") #Sets window title
-            
-            container = tk.Frame(self) #Creates base frame to display different frames in
-            container.pack(side="top", fill="both", expand=True)
-            container.grid_rowconfigure(0, weight=1) #row configurations. 3 rows to expand equally
-            container.grid_rowconfigure(1, weight=1)
-            container.grid_rowconfigure(2, weight=1)
-            container.grid_columnconfigure(0, weight=1) #column configurations. 3 columns to expand equally
-            container.grid_columnconfigure(1, weight=1)
-            container.grid_columnconfigure(2, weight=1)
-            
-            self.cammethod = cammethod #method for starting camera class
-            '''Move cammethod down and run boot test for camera FPS at startup?'''
-            self.camera = camera #assigns camera class 
-            self.cameraon = 0 #Internal variable tracking if the camera is on
-            
-            self.camerawidth = 640 #Assumed camera width
-            self.cameraheight = 480 #Assumed camera height
-            self.camerafps = 30 #Assumed camera fps
-            
-            self.grabcamstat() #Method to aquire camera width, height and fps #seems to crash python on MacOS when uncommented
-            
-            self.RTPraw = RealtimePlotWindow(self.camerafps) #Creates instance of animated plot class to display the raw camera data
-            self.RTPfilt = RealtimePlotWindow(self.camerafps)#Creates instance of animated plot class to display the filtered camera data
-            self.RTPfilt.ax.set_title("RGB Filtered") #Resets the title of the filtered plot
-            
-            self.frames = {} #Creates a dictionary of possible frames to show
-            for F in (CameraFeed,RGBPlot): #Enter all frame class names that are to be created and used
-                frame = F(container, self) #Creates instance of frame class
-                self.frames[F] = frame     #Stored frame instance   
-                frame.grid(row=0, column=0, sticky="nsew") #exports frame instance to window
-            self.showFrame(RGBPlot) #Shows default page
+        tk.Tk.wm_title(self, "WebCamera monitor") #Sets window title
+        
+        container = tk.Frame(self) #Creates base frame to display different frames in
+        container.pack(side="top", fill="both", expand=True)
+        container.grid_rowconfigure(0, weight=1) #row configurations. 3 rows to expand equally
+        container.grid_rowconfigure(1, weight=1)
+        container.grid_rowconfigure(2, weight=1)
+        container.grid_columnconfigure(0, weight=1) #column configurations. 3 columns to expand equally
+        container.grid_columnconfigure(1, weight=1)
+        container.grid_columnconfigure(2, weight=1)
+        
+        self.cammethod = cammethod #method for starting camera class
+        '''Move cammethod down and run boot test for camera FPS at startup?'''
+        self.camera = camera #assigns camera class 
+        self.cameraon = 0 #Internal variable tracking if the camera is on
+        
+        self.camerawidth = 640 #Assumed camera width
+        self.cameraheight = 480 #Assumed camera height
+        self.camerafps = 17 #Assumed camera fps
+        
+        self.grabcamstat() #Method to aquire camera width, height and fps #seems to crash python on MacOS when uncommented
+        
+        self.RTPraw = RealtimePlotWindow(self.camerafps) #Creates instance of animated plot class to display the raw camera data
+        self.RTPfilt = RealtimePlotWindow(self.camerafps)#Creates instance of animated plot class to display the filtered camera data
+        self.RTPfilt.ax.set_title("RGB Filtered") #Resets the title of the filtered plot
+        
+        self.frames = {} #Creates a dictionary of possible frames to show
+        for F in (CameraFeed,RGBPlot): #Enter all frame class names that are to be created and used
+            frame = F(container, self) #Creates instance of frame class
+            self.frames[F] = frame     #Stored frame instance   
+            frame.grid(row=0, column=0, sticky="nsew") #exports frame instance to window
+        self.showFrame(RGBPlot) #Shows default page
     
     
     def grabcamstat(self):
@@ -209,16 +209,23 @@ class CameraGUI(tk.Tk):
         else:
             print("Camera not on")
         return 0 #Returns 0 if camera is not open or failed to close
-     
-        
-     def __del__(self):
+    
+    
+
+    def __del__(self):
         try:
-            print("hi")
+            self.after_cancel(self.colouris)
         except:
             pass
-        
-      
-        
+        try:
+            self.after_cancel(self.cameraupdate)
+        except:
+            pass
+        print("Done")
+
+    
+
+
 class RGBPlot(tk.Frame):
     '''RGB plotting page'''
     def __init__(self, parent, controller):
@@ -280,7 +287,7 @@ class RGBPlot(tk.Frame):
         else:
             if controller.GUIcamstop(): #Tries to call GUI camera stop method. Condition passes if camera successfully closes
                 self.toggleFeedbutton.config(text="Enable camera feed", bg="#70db70") #Changes button display to enable option
-                controller.after_cancel(self.colouris) #Cancels the callback fo the colour update for the label
+                controller.after_cancel(controller.colouris) #Cancels the callback fo the colour update for the label
                 
                 
     def colourdisplay(self, controller):
@@ -291,13 +298,7 @@ class RGBPlot(tk.Frame):
         value = f'#{red:02x}{green:02x}{blue:02x}' #String formating to provide combined colour hex code
         self.labelc.config(text=value) 
         self.labelcshow.config(bg = (value))
-        self.colouris = controller.after(self.colourdelay, self.colourdisplay, controller) #Method calls itself with a delay of self.cameradelay ms.
-              
-    def __del__(self, controller):
-        try:
-            controller.after_cancel(self.colouris)
-        except:
-            pass
+        controller.colouris = controller.after(self.colourdelay, self.colourdisplay, controller) #Method calls itself with a delay of self.cameradelay ms.
 
 
 
@@ -370,7 +371,7 @@ class CameraFeed(tk.Frame):
     def cameraupdatestop(self,controller):
         self.stopvid = 1 #Used to stop cameraupdate method calling itself. 1 stops this
         try:
-            controller.after_cancel(self.videofeed) #Stops future callbacks of cameraupdate method. Try except in case there is no callback instance
+            controller.after_cancel(controller.videofeed) #Stops future callbacks of cameraupdate method. Try except in case there is no callback instance
         except:
             pass
         finally:    
@@ -391,11 +392,6 @@ class CameraFeed(tk.Frame):
         if self.stopvid: #Check to see if method should stop calling itself
             return 0 #Return to prevent method from calling itself
         
-        self.videofeed = controller.after(self.cameradelay, self.cameraupdate, controller) #Method calls itself with a delay of self.cameradelay ms.
-
-
-    def __del__(self, controller):
-        try:
-            controller.after_cancel(self.cameraupdate)
-        except:
-            pass
+        controller.videofeed = controller.after(self.cameradelay, self.cameraupdate, controller) #Method calls itself with a delay of self.cameradelay ms.
+        
+        

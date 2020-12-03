@@ -56,11 +56,11 @@ class IIRFilter():
         for i in self.IIR2Farray:
             y = i.filter(y)
             
+        return y
+        
         #Imposed limit specific to colour testing. Not implemented inside the loop or stored to prevent incorrect filtering of subsequent values
         if y > 255: #Max value for a single colour
-            #print("Y exceeded colour max with a value of " + str(y))    
-            y = 255 #Set returned value to max value for colour
-            
+            y = 255 #Set returned value to max value for colour    
         return y
 
 
