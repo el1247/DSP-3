@@ -21,6 +21,14 @@ def hasData(retval, data):
     rfilt = iirfilterr.filter(r)
     gfilt = iirfilterg.filter(g)
     bfilt = iirfilterb.filter(b)
+    
+    if rfilt > 255:
+        rfilt = 255
+    if gfilt > 255:
+        gfilt = 255
+    if bfilt > 255:
+        bfilt = 255
+    
     app.RTPfilt.addData(rfilt, gfilt, bfilt)
     logr.append(r)
     logg.append(g)
@@ -57,8 +65,8 @@ iirfilterb = iir_filter.IIRFilter(signal.cheby2(filterorder, dBrejection, fpy, o
 #GUI running
 app.mainloop()
 
+loglog = [logr, logg, logb]
+np.savetxt("loglog.dat", loglog)
+
 camera.__del__()
 app.__del__()
-
-loglog = [logr, logg, logb]
-np.savetxt("loglog.txt", loglog)

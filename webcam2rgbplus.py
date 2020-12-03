@@ -25,22 +25,13 @@ class webcam2rgbplus(webcam2rgb.Webcam2rgb):
             webcam2rgb.Webcam2rgb.stop(self)
         except Exception as e:
             print("Could not execute webcam2rgb.stop")
-            print(e)
+            #print(e) #Prints exception for calling Webcam2rgb.stop
         try:
-            self.cam.release() #Potentially try catch for no instance of cam?
+            self.cam.release() #Tries to close the camera
         except:
             print("Cam release failed") #Prints nothing to console, in case app is closed without instance of webcam
         
     '''Custom classes'''
-    def __del__(self):
-        try:
-            if self.cam.isOpened():
-                self.cam.release()
-                print("Stopping camera")
-        except:
-            print("No instance of camera to close")
-            
-            
     def getGeometry(self):
         '''Returns width and height'''
         return [self.cam.get(cv2.CAP_PROP_FRAME_WIDTH),self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT)]
@@ -57,3 +48,12 @@ class webcam2rgbplus(webcam2rgb.Webcam2rgb):
                 return (ret, None)
         else:
             return (ret, None)
+        
+        
+    def __del__(self):
+        try:
+            if self.cam.isOpened():
+                self.cam.release()
+                print("Stopping camera")
+        except:
+            print("No instance of camera to close")

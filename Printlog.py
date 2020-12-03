@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 
 fs = 17
 
-#log = np.loadtxt("loglogLongpink.txt")
-log = np.loadtxt("loglog1Pink.txt")
+log = np.loadtxt("loglog.dat")
+
 red = log[0]
 green = log[1]
 blue = log[2]
