@@ -45,17 +45,16 @@ camera = webcam2rgbplus.webcam2rgbplus()
 
 #Starting animation and GUI
 app = WebcamGUI.CameraGUI(camera,hasData)
-ani = animation.FuncAnimation(app.RTPraw.fig, app.RTPraw.update, interval = 100)
-ani2 = animation.FuncAnimation(app.RTPfilt.fig, app.RTPfilt.update, interval = 100)
+ani = animation.FuncAnimation(app.RTPraw.fig, app.RTPraw.update, interval = 50)
+ani2 = animation.FuncAnimation(app.RTPfilt.fig, app.RTPfilt.update, interval = 50)
 
 #Filter coefficients
 fc = 3 #Cut off frequency of 3Hz
+filterorder = 6 #Order of filters
+dBrejection = 50 #Decibell reject at cut off frequency
 fs = app.camerafps #Sampling rate of camera
 f = fc/fs #Normalised frequency
 fpy = f*2 #Python normalised frequency
-
-filterorder = 8
-dBrejection = 50
 
 #Creating instances of filter
 iirfilterr = iir_filter.IIRFilter(signal.cheby2(filterorder, dBrejection, fpy, output = 'sos'))
@@ -65,8 +64,9 @@ iirfilterb = iir_filter.IIRFilter(signal.cheby2(filterorder, dBrejection, fpy, o
 #GUI running
 app.mainloop()
 
-loglog = [logr, logg, logb]
-np.savetxt("loglog.dat", loglog)
+loglog = [logr, logg, logb] #Combines r, g and b lists together into one big list to be exported
+np.savetxt("loglog.dat", loglog) #Exports the r, g and b big list to loglog.dat file
 
+#Destructors, needed when force closing GUI with camera open
 camera.__del__()
 app.__del__()

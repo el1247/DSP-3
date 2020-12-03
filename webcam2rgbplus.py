@@ -54,6 +54,7 @@ class webcam2rgbplus(webcam2rgb.Webcam2rgb):
         try:
             if self.cam.isOpened():
                 self.cam.release()
-                print("Stopping camera")
+                #print("Camera stopped") #Could be uncommented to alert user that camera has been stopped
         except:
-            print("No instance of camera to close")
+            pass
+            #print("No instance of camera to close") #Could be uncommented to alert user of error state.

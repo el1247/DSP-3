@@ -86,7 +86,6 @@ class CameraGUI(tk.Tk):
         self.os = os.name #Gets system OS name
         if self.os =="nt": #Check to see if os is windows
                 self.directShow = True #Windows code
-                self.directShow = False #Insert for testing purpose#######################################################################
         else:
             self.directShow = False #Linux and MacOS code
         
@@ -124,7 +123,7 @@ class CameraGUI(tk.Tk):
         
         self.camerawidth = 640 #Assumed camera width
         self.cameraheight = 480 #Assumed camera height
-        self.camerafps = 17 #Assumed camera fps
+        self.camerafps = 15 #Assumed camera fps
         
         self.grabcamstat() #Method to aquire camera width, height and fps #seems to crash python on MacOS when uncommented
         
@@ -153,7 +152,7 @@ class CameraGUI(tk.Tk):
             self.camerafps = int(camerafs)
         else:
             print("Warning: Observed sample rate is 0.")
-        print(self.camera.cam.getBackendName())
+        print("Camera backend is:" +str(self.camera.cam.getBackendName()))
         print("Dimensions = "+str(self.camerawidth)+" x "+str(self.cameraheight)+". Sampling rate = "+str(self.camerafps)+". (Measured = "+str(camerafs)+")")
         self.GUIcamstop() #Turns camera off
         
@@ -183,9 +182,9 @@ class CameraGUI(tk.Tk):
         if not self.checkcam(): #Checks camera is off
             try: #Attempts to start camera                                                 
                 self.camera.start(self.cammethod, cameraNumber = 0, directShow = self.directShow) #Calls camera start method
-                self.cameraon = 1
+                self.cameraon = 1 
                 if self.checkcam(): #Checks camera has successfully been turned on
-                    print("Camera started")
+                    #print("Camera started") #Could be uncommented to alert user that camera has been started
                     return 1 #Returns 1 if camera successfully turned on
                 else:
                     print("Camera failed to open")
@@ -202,7 +201,7 @@ class CameraGUI(tk.Tk):
             try:
                 self.camera.stop() #Calls camera stop method
                 self.cameraon = 0
-                print("Stopping camera")
+                #print("Camera stopped") #Could be uncommented to alert user that camera has been stopped
                 return 1 #Returns 1 if camera successfully turns off
             except:
                 print("Webcam2rgb stop method failed")
@@ -211,7 +210,18 @@ class CameraGUI(tk.Tk):
         return 0 #Returns 0 if camera is not open or failed to close
     
     
-
+    def bubbledetect(self):
+        '''Detection method for bubbles. Returns 1 if there is a bubble, 0 if there is no bubble and -1 if 
+        the camera is not aimed within a certain light region, suggesting it is not pointed directly at the lava lamp.'''
+        if int(self.RTPfilt.plotbuffers[0][499]) > 200 and int(self.RTPfilt.plotbuffers[2][499]) > 200:
+            if int(self.RTPfilt.plotbuffers[1][499]) > 200:
+                return 1 #Bubble detected
+            else:
+                return 0 #Bubble not detected
+        else:
+            return -1 #Not a high enough r and b values detected, suggesting camera is missaligned
+        
+        
     def __del__(self):
         try:
             self.after_cancel(self.colouris)
@@ -221,9 +231,11 @@ class CameraGUI(tk.Tk):
             self.after_cancel(self.cameraupdate)
         except:
             pass
-        print("Done")
+        try:
+            self.after_cancel(self.feedbubb)
+        except:
+            pass
 
-    
 
 
 class RGBPlot(tk.Frame):
@@ -246,13 +258,17 @@ class RGBPlot(tk.Frame):
                             command=lambda: self.toggleFeed(controller))
         self.toggleFeedbutton.grid(row=0, column=2, padx=10, pady=10)
 
-        #Top right label displaying colour
+        #Top middle label displaying colour value
         self.labelc = tk.Label(self, text="#000000", font=LARGE_FONT)        
         self.labelc.grid(row=0, column = 3, padx=10,pady=10)
         
-        #Top right label displaying colour
+        #Top middle right label displaying colour
         self.labelcshow = tk.Label(self,width = 30)        
         self.labelcshow.grid(row=0, column = 4, padx=10,pady=10)
+        
+        #Top right label displaying if a bubble is detected
+        self.labeldet = tk.Label(self, text="Not detecting", bg = "#ffff1a", font = LARGE_FONT, width = 30)        
+        self.labeldet.grid(row=0, column = 5, padx=10,pady=10)
 
         #Left animated plot (animation function needs to be called in main code)
         canvas = FigureCanvasTkAgg(controller.RTPraw.fig, self)
@@ -287,17 +303,27 @@ class RGBPlot(tk.Frame):
         else:
             if controller.GUIcamstop(): #Tries to call GUI camera stop method. Condition passes if camera successfully closes
                 self.toggleFeedbutton.config(text="Enable camera feed", bg="#70db70") #Changes button display to enable option
+                self.labeldet.config(text="Not detecting", bg = "#ffff1a")
                 controller.after_cancel(controller.colouris) #Cancels the callback fo the colour update for the label
                 
                 
     def colourdisplay(self, controller):
-        '''Control for the two labels on the top right that display the colour value and colour'''
-        red = int(controller.RTPraw.plotbuffers[0][499]) #Takes the last value of the red plot buffer
-        green = int(controller.RTPraw.plotbuffers[1][499]) #Takes the last value of the green plot buffer
-        blue = int(controller.RTPraw.plotbuffers[2][499]) #Takes the last value of the blue plot buffer
+        '''Control for the three labels on the top right that display the colour value, colour and if a bubble is detected'''
+        red = round(controller.RTPfilt.plotbuffers[0][499]) #Takes the last value of the red plot buffer
+        green = round(controller.RTPfilt.plotbuffers[1][499]) #Takes the last value of the green plot buffer
+        blue = round(controller.RTPfilt.plotbuffers[2][499]) #Takes the last value of the blue plot buffer
         value = f'#{red:02x}{green:02x}{blue:02x}' #String formating to provide combined colour hex code
         self.labelc.config(text=value) 
         self.labelcshow.config(bg = (value))
+        
+        if controller.cameraon:
+            if controller.bubbledetect() > 0:
+                self.labeldet.config(text="Bubble detected", bg = "#70db70")
+            else:
+                self.labeldet.config(text="No bubble detected", bg="#ff4d4d")
+        else:
+            self.labeldet.config(text="Not detecting", bg = "#ffff1a")
+            
         controller.colouris = controller.after(self.colourdelay, self.colourdisplay, controller) #Method calls itself with a delay of self.cameradelay ms.
 
 
@@ -322,6 +348,10 @@ class CameraFeed(tk.Frame):
         self.toggleShowbutton = tk.Button(self, text="Show me",width = 30, bg="#70db70",
                             command=lambda: self.toggleShow(controller))
         self.toggleShowbutton.grid(row=0, column=2, padx=10, pady=10)
+        
+        #Top right label displaying if a bubble is detected
+        self.labeldet2 = tk.Label(self, text="Not detecting", bg = "#ffff1a", font = LARGE_FONT, width = 30)        
+        self.labeldet2.grid(row=0, column = 5, padx=10,pady=10)
         
         self.cameradelay = 33  #Controls canvas refresh rate in ms. Set to 33 to give an approximate 30FPS refresh rate
         self.canvasoffsetw = controller.camerawidth/2  #Offset for camera screenshot in canvas, width. Set to midpoint based on captured camera dimensions
@@ -365,6 +395,7 @@ class CameraFeed(tk.Frame):
         if not controller.checkcam(): #checks to see if camera is on
             return 0 #returns 0 if camera is off
         self.cameraupdate(controller) #Calls method to display what the webcam is seeing
+        self.feedbubble(controller) #Calls method to display if a bubble is being detected
         return 1 #returns 1 to indicate method was successful
     
     
@@ -372,6 +403,7 @@ class CameraFeed(tk.Frame):
         self.stopvid = 1 #Used to stop cameraupdate method calling itself. 1 stops this
         try:
             controller.after_cancel(controller.videofeed) #Stops future callbacks of cameraupdate method. Try except in case there is no callback instance
+            controller.after_cancel(controller.feedbubb) #Stops future callbacks of bubble detected label.
         except:
             pass
         finally:    
@@ -393,5 +425,17 @@ class CameraFeed(tk.Frame):
             return 0 #Return to prevent method from calling itself
         
         controller.videofeed = controller.after(self.cameradelay, self.cameraupdate, controller) #Method calls itself with a delay of self.cameradelay ms.
+        
+      
+    def feedbubble(self, controller):
+        '''Method for the label in the top right that display  if a bubble is detected'''
+        if controller.cameraon:
+            if controller.bubbledetect() > 0:
+                self.labeldet2.config(text="Bubble detected", bg = "#70db70")
+            else:
+                self.labeldet2.config(text="No bubble detected", bg="#ff4d4d")
+        else:
+            self.labeldet2.config(text="Not detecting", bg = "#ffff1a")
+        controller.feedbubb = controller. after(self.cameradelay, self.feedbubble, controller)        
         
         
