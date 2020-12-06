@@ -25,9 +25,7 @@ LARGE_FONT = ("Verdana", 12) #Constant created for font consistancy
 
 '''Idea log: Change try/except in init of CameraGUI for logo into OS specific code. May need to import platform: https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on#:~:text=If%20you%20want%20to%20check,OS%20itself%20then%20use%20sys.
 Issue with enabling show me, switching to RGB plot, enabling camera and then switching back to camera view
-When using DShow consider capturing frames for 30 seconds and counting frames to get fps?
 Redundant variables: self.cameraon currently is never used, leave for now
-
 '''
 
 
@@ -71,9 +69,9 @@ class RealtimePlotWindow:
     
     def addData(self, r=0, g=0, b=0):
         '''Method of inserting new data into the ring buffer. Add data here, in the (r, g, b) order. Missing values will be set to 0'''
-        self.ringbuffers[0].append(r)
-        self.ringbuffers[1].append(g)
-        self.ringbuffers[2].append(b)
+        self.ringbuffers[0].append(r) #adds red data to ring buffer for red
+        self.ringbuffers[1].append(g) #adds green data to ring buffer for green
+        self.ringbuffers[2].append(b) #adds blue data to ring buffer for blue
 
 
 
@@ -228,7 +226,10 @@ class CameraGUI(tk.Tk):
             else:
                 if self.bubble: #bubble previously detected
                     self.bubblestop = time.time()
-                    self.bubbleseed(green)
+                    self.seedlog.append(self.bubbleseed(green))
+                    if len(self.seedlog) > 4:
+                        np.savetxt("randomseed.dat", self.seedlog)
+                        self.seedlog = []
                     self.bubble = False #bubble not detected
                 return 0 #Bubble not detected
         else:
@@ -236,12 +237,13 @@ class CameraGUI(tk.Tk):
      
         
     def bubbleseed(self, value):
-         duration = self.bubblestop - self.bubblestart
-         seed = duration*value
-         self.seedlog.append(seed)
-         print("Bubble detected for "+str(round(duration,1))+" seconds. Random seed is: "+str(seed))
+        '''Random Number Generator Seed Generation. Takes single value input and returns the generated seed.'''
+        duration = self.bubblestop - self.bubblestart
+        seed = duration*value
+        print("Bubble detected for "+str(round(duration,1))+" seconds. Random seed is: "+str(seed)) #Uncommnet to see bubble detected duration and random seed
+        return seed
         
-             
+        
     def __del__(self):
         try:
             self.after_cancel(self.colouris)

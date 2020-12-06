@@ -34,7 +34,14 @@ class webcam2rgbplus(webcam2rgb.Webcam2rgb):
     '''New methods'''
     def getGeometry(self):
         '''Returns width and height'''
-        return [self.cam.get(cv2.CAP_PROP_FRAME_WIDTH),self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+        try:
+            width = self.cam.get(cv2.CAP_PROP_FRAME_WIDTH)
+            height = self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        except:
+            width = 640
+            height = 480
+            print("Error grabbing camera dimensions, assumed dimensions of 640x480")
+        return [width, height]
     
     
     def get_frame(self):
@@ -53,8 +60,8 @@ class webcam2rgbplus(webcam2rgb.Webcam2rgb):
     def __del__(self):
         try:
             if self.cam.isOpened():
-                self.cam.release()
+                self.stop()
                 #print("Camera stopped") #Could be uncommented to alert user that camera has been stopped
         except:
-            pass
             #print("No instance of camera to close") #Could be uncommented to alert user of error state.
+            pass
