@@ -25,13 +25,13 @@ class webcam2rgbplus(webcam2rgb.Webcam2rgb):
             webcam2rgb.Webcam2rgb.stop(self)
         except Exception as e:
             print("Could not execute webcam2rgb.stop")
-            #print(e) #Prints exception for calling Webcam2rgb.stop
+            print(e) #Prints exception for calling Webcam2rgb.stop
         try:
             self.cam.release() #Tries to close the camera
         except:
-            print("Cam release failed") #Prints nothing to console, in case app is closed without instance of webcam
+            pass
         
-    '''Custom classes'''
+    '''New methods'''
     def getGeometry(self):
         '''Returns width and height'''
         return [self.cam.get(cv2.CAP_PROP_FRAME_WIDTH),self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT)]

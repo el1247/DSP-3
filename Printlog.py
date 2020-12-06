@@ -28,10 +28,15 @@ plt.title("Raw data")
 plt.xlabel("Time(s)")
 plt.ylabel("RGB values")
 
+'''
+red *= np.hamming(length)
+green *= np.hamming(length)
+blue *= np.hamming(length)
+'''
+
 fftred = np.fft.fft(red)
 fftgreen = np.fft.fft(green)
 fftblue = np.fft.fft(blue)
-
 
 plt.figure(2)
 faxis = np.linspace(0,fs,length,endpoint=False)

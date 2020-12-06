@@ -18,7 +18,7 @@ style.use("ggplot")
 import numpy as np
 import PIL.Image, PIL.ImageTk
 import os
-
+import time
 
 LARGE_FONT = ("Verdana", 12) #Constant created for font consistancy
   
@@ -131,6 +131,11 @@ class CameraGUI(tk.Tk):
         self.RTPfilt = RealtimePlotWindow(self.camerafps)#Creates instance of animated plot class to display the filtered camera data
         self.RTPfilt.ax.set_title("RGB Filtered") #Resets the title of the filtered plot
         
+        self.bubble = False
+        self.bubblestart = time.time()
+        self.bubblestop = time.time()
+        self.seedlog = []
+        
         self.frames = {} #Creates a dictionary of possible frames to show
         for F in (CameraFeed,RGBPlot): #Enter all frame class names that are to be created and used
             frame = F(container, self) #Creates instance of frame class
@@ -213,15 +218,30 @@ class CameraGUI(tk.Tk):
     def bubbledetect(self):
         '''Detection method for bubbles. Returns 1 if there is a bubble, 0 if there is no bubble and -1 if 
         the camera is not aimed within a certain light region, suggesting it is not pointed directly at the lava lamp.'''
+        green = int(self.RTPfilt.plotbuffers[1][499])
         if int(self.RTPfilt.plotbuffers[0][499]) > 200 and int(self.RTPfilt.plotbuffers[2][499]) > 200:
-            if int(self.RTPfilt.plotbuffers[1][499]) > 200:
+            if green > 200:
+                if not self.bubble: #bubble not previously detected
+                    self.bubblestart = time.time()
+                    self.bubble = True #bubble detected
                 return 1 #Bubble detected
             else:
+                if self.bubble: #bubble previously detected
+                    self.bubblestop = time.time()
+                    self.bubbleseed(green)
+                    self.bubble = False #bubble not detected
                 return 0 #Bubble not detected
         else:
             return -1 #Not a high enough r and b values detected, suggesting camera is missaligned
+     
         
+    def bubbleseed(self, value):
+         duration = self.bubblestop - self.bubblestart
+         seed = duration*value
+         self.seedlog.append(seed)
+         print("Bubble detected for "+str(round(duration,1))+" seconds. Random seed is: "+str(seed))
         
+             
     def __del__(self):
         try:
             self.after_cancel(self.colouris)
