@@ -44,15 +44,21 @@ def hasData(retval, data):
         bfilt = 0
     
     app.RTPfilt.addData(rfilt, gfilt, bfilt) #Sends filtered data to GUI filtered data plot
-    #logr.append(r) #Uncomment to log the red value of the camera. Adds the latests raw red value to the list
-    #logg.append(g) #Uncomment to log the green value of the camera. Adds the latests raw green value to the list
-    #logb.append(b) #Uncomment to log the blue value of the camera. Adds the latests raw blue value to the list
+    #logrraw.append(r) #Uncomment to log the red value of the camera. Adds the latests raw red value to the list
+    #loggraw.append(g) #Uncomment to log the green value of the camera. Adds the latests raw green value to the list
+    #logbraw.append(b) #Uncomment to log the blue value of the camera. Adds the latests raw blue value to the list
+    #logrfilt.append(rfilt) #Uncomment to log the red value of the camera. Adds the latests filtered red value to the list
+    #loggfilt.append(gfilt) #Uncomment to log the green value of the camera. Adds the latests filtered green value to the list
+    #logbfilt.append(bfilt) #Uncomment to log the blue value of the camera. Adds the latests filtered blue value to the list
 
 
 #Log creation    
-logr=[] #Creates the red list that stores the red values
-logg=[] #Creates the green list that stores the green values
-logb=[] #Creates the blue list that stores the blue values
+logrraw=[] #Creates the red list that stores the red values directly from the camera
+loggraw=[] #Creates the green list that stores the green values directly from the camera
+logbraw=[] #Creates the blue list that stores the blue values directly from the camera
+logrfilt=[] #Creates the red list that stores the filtered red values 
+loggfilt=[] #Creates the green list that stores the filtered  green values
+logbfilt=[] #Creates the blue list that stores the filtered blue values
 logtimes=[] #Used to store all the times the hasData method is called.
   
 #create instances of camera
@@ -82,9 +88,11 @@ iirfilterb = iir_filter.IIRFilter(soscheby)
 #GUI running
 app.mainloop()
 
-loglog = [logr, logg, logb] #Combines r, g and b lists together into one big list to be exported
-np.savetxt("loglog.dat", loglog) #Exports the r, g and b big list to loglog.dat file
-np.savetxt("consoletimes.dat", logtimes) #Exports logtimes to consoletimes.dat. For analysis run consoletimesanalysis.ppy
+lograw = [logrraw, loggraw, logbraw] #Combines r, g and b raw lists together into one big list to be exported
+logfilt = [logrfilt, loggfilt, logbfilt] #Combines r, g and b filtered lists together into one big list to be exported
+#np.savetxt("lograw.dat", lograw) #Uncomment to export raw camera data. Exports the r, g and b raw list to lograw.dat
+#np.savetxt("logfilt.dat", logfilt) #Uncomment to export filtered camera data. Exports the r, g and b filtered list to logfilt.dat
+#np.savetxt("consoletimes.dat", logtimes) #Uncomment to export camera times. Exports logtimes to consoletimes.dat. For analysis run consoletimesanalysis.ppy
 
 #Destructors, needed when force closing GUI with camera open
 camera.__del__()

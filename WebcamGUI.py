@@ -23,12 +23,6 @@ import time
 LARGE_FONT = ("Verdana", 12) #Constant created for font consistancy
   
 
-'''Idea log: Change try/except in init of CameraGUI for logo into OS specific code. May need to import platform: https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on#:~:text=If%20you%20want%20to%20check,OS%20itself%20then%20use%20sys.
-Issue with enabling show me, switching to RGB plot, enabling camera and then switching back to camera view
-Redundant variables: self.cameraon currently is never used, leave for now
-'''
-
-
 class RealtimePlotWindow:
     '''Class used to animate a plot. A created instance has 3 memory channels: r g and b stored in associated index positions. Channels are updated
     using the addData method. Call the update function to move the data into the graph memory. Call update when animating.'''
@@ -338,8 +332,9 @@ class RGBPlot(tk.Frame):
         self.labelc.config(text=value) 
         self.labelcshow.config(bg = (value))
         
-        if controller.cameraon:
-            if controller.bubbledetect() > 0:
+        bubble = controller.bubbledetect()
+        if controller.cameraon and bubble > -1:
+            if bubble > 0:
                 self.labeldet.config(text="Bubble detected", bg = "#70db70")
             else:
                 self.labeldet.config(text="No bubble detected", bg="#ff4d4d")
@@ -451,8 +446,9 @@ class CameraFeed(tk.Frame):
       
     def feedbubble(self, controller):
         '''Method for the label in the top right that display  if a bubble is detected'''
-        if controller.cameraon:
-            if controller.bubbledetect() > 0:
+        bubble = controller.bubbledetect()
+        if controller.cameraon and bubble > -1:
+            if bubble > 0:
                 self.labeldet2.config(text="Bubble detected", bg = "#70db70")
             else:
                 self.labeldet2.config(text="No bubble detected", bg="#ff4d4d")
