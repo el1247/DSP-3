@@ -240,7 +240,7 @@ class CameraGUI(tk.Tk):
         '''Random Number Generator Seed Generation. Takes single value input and returns the generated seed.'''
         duration = self.bubblestop - self.bubblestart
         seed = duration*value
-        print("Bubble detected for "+str(round(duration,1))+" seconds. Random seed is: "+str(seed)) #Uncommnet to see bubble detected duration and random seed
+        #print("Bubble detected for "+str(round(duration,1))+" seconds. Random seed is: "+str(seed)) #Uncommnet to see bubble detected duration and random seed
         return seed
         
         
